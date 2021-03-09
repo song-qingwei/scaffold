@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 项目名称
 # shellcheck disable=SC2154
@@ -8,12 +8,10 @@ SERVER_NAME="${project.artifactId}"
 JAR_NAME="${project.build.finalName}.jar"
 
 # 进入bin目录
-cd $(dirname "$0") || exit
+cd "$(dirname "$0")" || exit
 
 # 返回到上一级项目根目录路径
 cd .. || exit
-
-# 打印项目根目录绝对路径
 
 # `pwd` 执行系统命令并获得结果
 DEPLOY_DIR=$(pwd)
@@ -25,7 +23,7 @@ CONF_DIR=$DEPLOY_DIR/config
 # 获取应用的端口号
 SERVER_PORT=$(sed -nr '/port: [0-9]+/ s/.*port: +([0-9]+).*/\1/p' config/application.yml)
 
-PID=$(pgrep -a java | grep "$CONF_DIR" |awk '{print $1}')
+PID=$(ps -ef | grep java | grep "$CONF_DIR" |awk '{print $2}')
 
 if [ "$1" = "status" ]; then
     if [ -n "$PID" ]; then
@@ -111,7 +109,7 @@ COUNT=0
 while [ $COUNT -lt 1 ]; do
     echo -e ".\c"
     sleep 1
-    let CHECK_COUNT+=1;
+    ((CHECK_COUNT++)) || true
     if [ "$CHECK_COUNT" -gt 20 ];then
         echo -e "\nERROR: The $SERVER_NAME start failed, Please open $STDOUT_FILE to view the error log"
         exit 1
@@ -119,7 +117,7 @@ while [ $COUNT -lt 1 ]; do
     if [ -n "$SERVER_PORT" ]; then
         COUNT=$(netstat -an | grep -c "$SERVER_PORT")
     else
-       COUNT=$(pgrep -a java | grep "$DEPLOY_DIR" | awk '{print $1}' | wc -l)
+       COUNT=$(ps -ef | grep java | grep "$DEPLOY_DIR" | awk '{print $2}' | wc -l)
     fi
     if [ "$COUNT" -gt 0 ]; then
         break
@@ -127,6 +125,6 @@ while [ $COUNT -lt 1 ]; do
 done
 
 echo "OK!"
-PID=$(pgrep -a java | grep "$DEPLOY_DIR" | awk '{print $1}')
+PID="$(ps -ef | grep java | grep "$DEPLOY_DIR" | awk '{print $2}')"
 echo "PID: $PID"
 echo "STDOUT: $STDOUT_FILE"

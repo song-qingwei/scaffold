@@ -1,20 +1,44 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 项目名称
 # shellcheck disable=SC2154
-APPLICATION="${project.artifactId}"
+SERVER_NAME="${project.artifactId}"
 
-# 项目启动jar包名称
-APPLICATION_JAR="${project.build.finalName}.jar"
+# 进入bin目录
+cd "$(dirname "$0")" || exit
 
-# 通过项目名称查找到PID，然后kill -9 pid
-# shellcheck disable=SC2009
-PID=$(ps -ef | grep "${APPLICATION_JAR}" | grep -v grep | awk '{ print $2 }')
-if [[ -z "$PID" ]]
-then
-    echo "${APPLICATION} is already stopped!"
-else
-    echo kill "${PID}"
-    kill -9 "${PID}"
-    echo "${APPLICATION} stopped successfully!"
+# 返回到上一级项目根目录路径
+cd .. || exit
+
+# `pwd` 执行系统命令并获得结果
+DEPLOY_DIR="$(pwd)"
+
+PID_LIST="$(ps -ef | grep java | grep "$DEPLOY_DIR" |awk '{print $2}')"
+
+if [ -z "${PID_LIST}" ]; then
+  echo "ERROR: The $SERVER_NAME does not started!"
+  exit 1
 fi
+
+echo -e "Stopping the $SERVER_NAME ...\c"
+
+for PID in ${PID_LIST}; do
+  kill "${PID}" > /dev/null 2>&1
+done
+
+COUNT=0
+while [ ${COUNT} -lt 1 ]; do
+  echo -e ".\c"
+  sleep 1
+  COUNT=1
+  for PID in ${PID_LIST}; do
+    PID_EXIST="$(ps -f -p "${PID}" | grep java)"
+    if [ -n "${PID_EXIST}" ]; then
+      COUNT=0
+      break
+    fi
+  done
+done
+
+echo "OK!"
+echo "PID: ${PID_LIST}"
