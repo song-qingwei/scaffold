@@ -25,13 +25,13 @@ SERVER_PORT=$(sed -nr '/port: [0-9]+/ s/.*port: +([0-9]+).*/\1/p' config/applica
 
 PID=$(ps -ef | grep java | grep "$CONF_DIR" |awk '{print $2}')
 
-if [ "$1" = "status" ]; then
+if [ "$1" == "status" ]; then
   if [ -n "$PID" ]; then
     echo "The $SERVER_NAME is running...!"
     echo "PID: $PID"
     exit 0
   else
-    echo "The $SERVER_NAME is stopped"
+    echo "The $SERVER_NAME is stopped!"
     exit 0
   fi
 fi
@@ -67,13 +67,19 @@ JAVA_OPTS=" -Djava.awt.headless=true -Djava.net.preferIPv4Stack=true "
 
 # 检测是否开启远程调试功能
 JAVA_DEBUG_OPTS=""
-if [ "$1" = "debug" ]; then
+if [ "$1" == "debug" ]; then
+  echo "INFO: The $SERVER_NAME DEBUG mode is started, port is 8000!"
   JAVA_DEBUG_OPTS=" -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n "
 fi
 
-# 检测是否开启JMX功能,使JVisvualVM能够连接JVM
+# 检测是否开启JMX功能,使jvisualvm能够连接JVM
 JAVA_JMX_OPTS=""
-if [ "$1" = "jmx" ]; then
+if [ "$1" == "jmx" ]; then
+  if [ -z "$2" ]; then
+    echo "ERROR: Please enter this $SERVER_NAME IP!"
+    exit 0
+  fi
+  echo "INFO: The $SERVER_NAME JMX mode is started, IP is $2, port is 1099!"
   JAVA_JMX_OPTS=" -Djava.rmi.server.hostname=$2 -Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false "
 fi
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# 进入bin目录
+cd "$(dirname "$0")" || exit
+
 # 启动脚本
 start(){
   ./start.sh
@@ -60,6 +63,6 @@ case "$1" in
     dump
     ;;
   *)
-    echo $"Usage: $0 {start|stop|restart|status|debug|jmx|dump}"
+    echo $"Usage: $0 {start|stop|restart|status|debug|jmx -IP|dump}"
     exit 1
 esac
